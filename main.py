@@ -19,7 +19,9 @@ import os
 
 index_template = """
 <html>
-	<head></head>
+	<head>
+		<link rel="stylesheet" href="styles.css"/>
+	</head>
 	<body>
 		<h1>My blog</h1>
 	</body>
@@ -35,21 +37,33 @@ def parse_and_create_files():
 	files = os.listdir(os.getcwd())
 	for f in files:
 		if ".post.bk" in f:
-			create_file(f) # would usually just write the code here, but pythons indentation is a pain in the ass
+			name = create_file(f) # would usually just write the code here, but pythons indentation is a pain in the ass
+			append_file(name, index_template)
 
 # what a lonely variable
 command = sys.argv[1]
 
 def create_file(file_name):
+	name = file_name[:file_name.find(".post.bk")]
 	with open(file_name, "r+") as file:
-		name = file_name[:file_name.find(".post.bk")]
 		with open(name + ".html", "w+") as html_file: # later have seperate calls based on command gen_all or gen file_name
 			bk_text = file.read()
 			bk_text = bk_text.replace("s.heading", "<h1>")
 			bk_text = bk_text.replace("e.heading", "</h1>")
 			bk_text = bk_text.replace("s.text", "<p>")
 			bk_text = bk_text.replace("e.text", "</p>")
+			html_file.write("<head><link rel=\"stylesheet\" href=\"styles.css\"></head>")
+			html_file.write("<body>\n\t")
 			html_file.write(bk_text)
+			html_file.write("</body>")
+	return name
+
+def append_file(name, index_template):
+	index = index_template.find("</h1>") + len("</h1>")
+	file_to_write = index_template[:index] + "\n<a href={}.html>{}</a>\n".format(name, name[0].upper() + name[1:]) + index_template[index:]
+	with open("index.html", "w+") as file:
+		file.write(file_to_write[1:])
+
 # used to generate a new .post.bk
 if command == "new_post":
 	file_name = sys.argv[2]
